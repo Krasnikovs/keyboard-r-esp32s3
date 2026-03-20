@@ -7,14 +7,16 @@
 // #include <HIDTypes.h>
 // #include <HIDKeyboardTypes.h>
 
-#include "USB.h"
+// #include "USB.h"
 // #include "USBHIDMouse.h"
-#include "USBHIDKeyboard.h"
+// #include "USBHIDKeyboard.h"
+#include <USB.h>
+#include <USBHIDKeyboard.h>
 #include <USBCDC.h>
 
 USBHIDKeyboard Keyboard;
-USBCDC m_serial;
-ESPUSB *m_usb;
+// USBCDC m_serial;
+// ESPUSB *m_usb;
 
 // Structure example to receive data
 // Must match the sender structure
@@ -27,49 +29,50 @@ typedef struct struct_message {
 struct_message myData;
 
 char recData;
+int new_data;
 // void out(char simbol);
-static void
-usbEventCallback(void*            arg,
-                 esp_event_base_t event_base,
-                 int32_t          event_id,
-                 void*            event_data) {
-  if (event_base == ARDUINO_USB_EVENTS) {
-    arduino_usb_event_data_t* data = (arduino_usb_event_data_t*)event_data;
-    switch (event_id) {
-      case ARDUINO_USB_STARTED_EVENT:
-        m_serial.println("USB PLUGGED");
-        break;
-      case ARDUINO_USB_STOPPED_EVENT:
-        m_serial.println("USB UNPLUGGED");
-        break;
-      case ARDUINO_USB_SUSPEND_EVENT:
-        m_serial.printf("USB SUSPENDED: remote_wakeup_en: %u\n",
-                        data->suspend.remote_wakeup_en);
-        break;
-      case ARDUINO_USB_RESUME_EVENT:
-        m_serial.println("USB RESUMED");
-        break;
+// static void
+// usbEventCallback(void*            arg,
+//                  esp_event_base_t event_base,
+//                  int32_t          event_id,
+//                  void*            event_data) {
+//   if (event_base == ARDUINO_USB_EVENTS) {
+//     arduino_usb_event_data_t* data = (arduino_usb_event_data_t*)event_data;
+//     switch (event_id) {
+//       case ARDUINO_USB_STARTED_EVENT:
+//         m_serial.println("USB PLUGGED");
+//         break;
+//       case ARDUINO_USB_STOPPED_EVENT:
+//         m_serial.println("USB UNPLUGGED");
+//         break;
+//       case ARDUINO_USB_SUSPEND_EVENT:
+//         m_serial.printf("USB SUSPENDED: remote_wakeup_en: %u\n",
+//                         data->suspend.remote_wakeup_en);
+//         break;
+//       case ARDUINO_USB_RESUME_EVENT:
+//         m_serial.println("USB RESUMED");
+//         break;
 
-      default:
-        break;
-    }
-  } else if (event_base == ARDUINO_USB_HID_EVENTS) {
-    arduino_usb_hid_event_data_t* data =
-      (arduino_usb_hid_event_data_t*)event_data;
-    switch (event_id) {
-      case ARDUINO_USB_HID_SET_PROTOCOL_EVENT:
-        m_serial.printf("HID SET PROTOCOL: %s\n",
-                        data->set_protocol.protocol ? "REPORT" : "BOOT");
-        break;
-      case ARDUINO_USB_HID_SET_IDLE_EVENT:
-        m_serial.printf("HID SET IDLE: %u\n", data->set_idle.idle_rate);
-        break;
+//       default:
+//         break;
+//     }
+//   } else if (event_base == ARDUINO_USB_HID_EVENTS) {
+//     arduino_usb_hid_event_data_t* data =
+//       (arduino_usb_hid_event_data_t*)event_data;
+//     switch (event_id) {
+//       case ARDUINO_USB_HID_SET_PROTOCOL_EVENT:
+//         m_serial.printf("HID SET PROTOCOL: %s\n",
+//                         data->set_protocol.protocol ? "REPORT" : "BOOT");
+//         break;
+//       case ARDUINO_USB_HID_SET_IDLE_EVENT:
+//         m_serial.printf("HID SET IDLE: %u\n", data->set_idle.idle_rate);
+//         break;
 
-      default:
-        break;
-    }
-  }
-}
+//       default:
+//         break;
+//     }
+//   }
+// }
 
 
 
@@ -78,35 +81,34 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&myData, incomingData, sizeof(myData));
   // Serial.print("Bytes received: ");
   // Serial.println(len);
-  Serial.println(myData.a[0]);
-  Keyboard.press(myData.a[0]);
-  // recData = myData.a[0];
+  // Serial.println(myData.a[0]);
+
+  // Keyboard.press(myData.a[0]);
+  recData = myData.a[0];
+  new_data = myData.b;
   // Serial.println(myData.b);
   // Serial.println();
 }
 
 void setup() {
-  // Initialize Serial Monitor
-  // Serial.begin(9600);
 
-  m_serial.onEvent(usbEventCallback);
-  Keyboard.onEvent(usbEventCallback);
-  USB.onEvent(usbEventCallback);
+  // m_serial.onEvent(usbEventCallback);
+  // Keyboard.onEvent(usbEventCallback);
+  // USB.onEvent(usbEventCallback);
 
-  // Serial.begin(115200);
-  m_serial.begin(115200);
+  Serial.begin(115200);
+  // m_serial.begin(115200);
   
-  while (!m_serial) {
+  while (!Serial) {
 		delay(10);
 	}
-  m_serial.println("Starting...");
-  delay(1000);
-  // USB.begin();
-  m_serial.println("Initializing keyboard and usb...");
-  m_usb = &USB;
-  m_usb->begin();
+  Serial.println("Starting...");
+  Serial.println("Initializing keyboard and usb...");
+  USB.begin();
+  // m_usb = &USB;
+  // m_usb->begin();
   Keyboard.begin();
-  delay(1000);
+  delay(100);
   // Set device as a Wi-Fi Station
 
   Serial.println("Initializing wifi...");
@@ -117,7 +119,7 @@ void setup() {
     return;
   }
 
-  delay(1000);
+  delay(100);
   
   // // Once ESPNow is successfully Init, we will register for recv CB to
   // // get recv packer info
@@ -135,12 +137,18 @@ void setup() {
 void loop() {
   // memcpy(&myData, '\0', sizeof(myData));
   
-  // Keyboard.press('1');
+  if (new_data == 2) {
+    Keyboard.press(recData);
+    delay(5);
+    Keyboard.release(recData);
+  }
+  
 
   // esp_now_recv_info();
-  Serial.println("c");
+  // Serial.println("c");
   // 
-  delay(1000);
+  new_data = 0;
+  delay(10);
 }
 
 // void out(char simbol) {
