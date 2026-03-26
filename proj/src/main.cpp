@@ -81,7 +81,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&myData, incomingData, sizeof(myData));
   // Serial.print("Bytes received: ");
   // Serial.println(len);
-  // Serial.println(myData.a[0]);
+  Serial.println(myData.a[0]);
+  Serial.println(myData.b);
 
   // Keyboard.press(myData.a[0]);
   recData = myData.a[0];
@@ -137,7 +138,7 @@ void setup() {
 void loop() {
   // memcpy(&myData, '\0', sizeof(myData));
   
-  if (new_data == 2) {
+  if (new_data == 1) {
     Keyboard.press(recData);
     delay(5);
     Keyboard.release(recData);
