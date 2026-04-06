@@ -21,8 +21,9 @@ USBHIDKeyboard Keyboard;
 // Structure example to receive data
 // Must match the sender structure
 typedef struct struct_message {
-    char a[1];
-    int b;
+    char msg_char[1];
+    int print_msg;
+    char type[1];
 } struct_message;
 
 // Create a struct_message called myData
@@ -30,6 +31,7 @@ struct_message myData;
 
 char recData;
 int new_data;
+char dataType;
 // void out(char simbol);
 // static void
 // usbEventCallback(void*            arg,
@@ -81,12 +83,13 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&myData, incomingData, sizeof(myData));
   // Serial.print("Bytes received: ");
   // Serial.println(len);
-  Serial.println(myData.a[0]);
-  Serial.println(myData.b);
+  Serial.println(myData.msg_char[0]);
+  Serial.println(myData.print_msg);
 
   // Keyboard.press(myData.a[0]);
-  recData = myData.a[0];
-  new_data = myData.b;
+  recData = myData.msg_char[0];
+  new_data = myData.print_msg;
+  dataType = myData.type[0];
   // Serial.println(myData.b);
   // Serial.println();
 }
@@ -139,9 +142,24 @@ void loop() {
   // memcpy(&myData, '\0', sizeof(myData));
   
   if (new_data == 1) {
-    Keyboard.press(recData);
-    delay(5);
-    Keyboard.release(recData);
+    if (dataType == 'c') {
+      // recData = KEY_KP_ENTER;
+      if (recData == 'e') {
+        Keyboard.press(KEY_KP_ENTER);
+        delay(5);
+        Keyboard.release(KEY_KP_ENTER);
+      } else if (recData == '+') {
+        Keyboard.press(KEY_KP_PLUS);
+        delay(5);
+        Keyboard.release(KEY_KP_PLUS);
+      }
+      
+    } else if (dataType == 's') {
+      Keyboard.press(recData);
+      delay(5);
+      Keyboard.release(recData);
+    }
+    
   }
   
 
